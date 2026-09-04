@@ -1,0 +1,120 @@
+{
+  "_descripcion": "Catálogo de obras (unidades de negocio). Cada obra usa su propio template Nubatic (carpeta Formatos/). El campo 'centro_costo' es la partida de Gastos Generales Directos de esa obra, que es la que se usa para rendiciones. Los templates viven en la carpeta Formatos/ y se ubican automáticamente por el código de obra.",
+
+  "CLH210": {
+    "nombre": "CLH210 PLANTA DE QUESOS COLUN",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25048,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH213": {
+    "nombre": "CLH213 AGROCENTRO EL TORO FRESIA",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25096,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH215": {
+    "nombre": "CLH215 CCU SERIE 500",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25142,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH216": {
+    "nombre": "CLH216 MCT PUERTO MONTT",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25184,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH219": {
+    "nombre": "CLH219 PUENTE NEVADO II",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25207,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH221": {
+    "nombre": "CLH221 PARQUE SUR LOTE 6",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25221,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH222": {
+    "nombre": "CLH222 CHILEPANEL II",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25237,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH223": {
+    "nombre": "CLH223 CD COCA COLA",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25262,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH225": {
+    "nombre": "CLH225 CMPC LOS ANGELES",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25314,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH226": {
+    "nombre": "CLH226 SKATE PARK AMANECER",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25287,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "CLH229": {
+    "nombre": "CLH229 GLOBAL AUSTRAL PUERTO MONT",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25303,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  },
+
+  "MAESTRANZA": {
+    "nombre": "MAESTRANZA EEMM (CM)",
+    "activa": true,
+    "centro_costo": {
+      "codigo": 25103,
+      "nombre": "TALLER FREIRE"
+    }
+  },
+
+  "_PLANTILLA_OBRA_NUEVA": {
+    "nombre": "CLHxxx NOMBRE OBRA",
+    "activa": false,
+    "centro_costo": {
+      "codigo": 99999,
+      "nombre": "10. GASTOS GENERALES DIRECTOS"
+    }
+  }
+}

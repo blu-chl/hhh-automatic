@@ -1,0 +1,22 @@
+{
+  "_descripcion": "Tabla GLOBAL de tipos de gasto (columna M:N del importador Nubatic). Estos códigos 20xxx son IDÉNTICOS al 'ID CUENTA CONTABLE' que entrega Xpendit, por lo que la columna G del importador se llena directo. No cambian por obra.",
+  "_acepta_iva": "Indica si ese tipo de gasto da derecho a IVA crédito fiscal cuando viene en FACTURA. Peajes, alimentación (boleta) y similares no recuperan IVA.",
+
+  "tipos": {
+    "20047": {"nombre": "ACEITES Y LUBRICANTES", "acepta_iva": true},
+    "20060": {"nombre": "ALIMENTACIÓN", "acepta_iva": false},
+    "20048": {"nombre": "COMBUSTIBLE", "acepta_iva": true},
+    "20066": {"nombre": "COMBUSTIBLE MAQUINARIAS", "acepta_iva": true},
+    "20058": {"nombre": "COSTOS FIJOS OFICINA", "acepta_iva": true},
+    "20062": {"nombre": "ESTACIONAMIENTOS", "acepta_iva": false},
+    "20065": {"nombre": "GASTOS DE OBRA", "acepta_iva": true},
+    "20059": {"nombre": "GASTOS DE OFICINA", "acepta_iva": true},
+    "20040": {"nombre": "GASTOS GENERALES", "acepta_iva": true},
+    "20064": {"nombre": "HOSPEDAJE", "acepta_iva": true},
+    "20046": {"nombre": "MANTENCIÓN DE MAQUINARIAS", "acepta_iva": true},
+    "20061": {"nombre": "MOVILIZACIÓN", "acepta_iva": false},
+    "20063": {"nombre": "NOTARÍA", "acepta_iva": false},
+    "20050": {"nombre": "PEAJES", "acepta_iva": false},
+    "20049": {"nombre": "REPUESTOS", "acepta_iva": true}
+  }
+}

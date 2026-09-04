@@ -1,0 +1,20 @@
+{
+  "_descripcion": "Autorizaciones especiales por empleado. Si una persona NO está aquí, se le aplican las reglas estándar. Aquí se registran las excepciones legítimas para que el motor no las marque como sospechosas.",
+  "_campos": {
+    "vehiculos_autorizados": "Lista de patentes que esta persona puede cargar legítimamente. Si carga otra, se marca COMBUSTIBLE_VEHICULO_AJENO.",
+    "autorizado_fin_de_semana": "true si puede generar gastos sábado/domingo sin alerta.",
+    "obras": "Obras en las que trabaja. Gasto en otra obra → alerta.",
+    "tope_gasto_individual": "Monto sobre el cual sus gastos van a aprobación de gerencia. null = usa el global."
+  },
+
+  "personas": {
+    "_PLANTILLA_PERSONA": {
+      "nombre_completo": "",
+      "vehiculos_autorizados": ["TJFR29"],
+      "autorizado_fin_de_semana": false,
+      "obras": ["CLH216"],
+      "tope_gasto_individual": null,
+      "nota": ""
+    }
+  }
+}

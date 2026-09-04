@@ -1,0 +1,35 @@
+{
+  "_descripcion": "Registro de vehículos para validar cargas de combustible. 'estanque_litros' es la capacidad máxima del estanque (carga imposible si la supera). 'rendimiento_km_litro' es el rendimiento esperado. 'tipo' afecta qué reglas aplican (los camiones no se controlan por rendimiento). 'litros_max_semana' es un tope blando de alerta.",
+  "_patentes_vistas": "TJFR29 y ENVA22 aparecieron en las facturas de combustible. ENVA22 parece ser un envase/bidón (vehículo='ENVASE' en la factura), no un vehículo rodante.",
+
+  "vehiculos": {
+    "TJFR29": {
+      "tipo": "camioneta",
+      "estanque_litros": 80,
+      "rendimiento_km_litro": 9,
+      "litros_max_semana": 250,
+      "combustible": "gasolina 93",
+      "obra": "CLH216",
+      "nota": "Camioneta de terreno Puerto Montt"
+    },
+    "ENVA22": {
+      "tipo": "bidon",
+      "estanque_litros": 60,
+      "rendimiento_km_litro": null,
+      "litros_max_semana": 200,
+      "combustible": "diesel",
+      "obra": "CLH216",
+      "nota": "Bidón/envase para maquinaria. No aplica control por rendimiento."
+    },
+
+    "_PLANTILLA_VEHICULO": {
+      "tipo": "camioneta | camion | maquinaria | bidon",
+      "estanque_litros": 80,
+      "rendimiento_km_litro": 9,
+      "litros_max_semana": 250,
+      "combustible": "gasolina 93 | diesel",
+      "obra": "CLHxxx",
+      "nota": ""
+    }
+  }
+}

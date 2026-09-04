@@ -1,0 +1,47 @@
+{
+  "_descripcion": "Reglas y umbrales globales del motor. Cada regla se puede activar/desactivar y ajustar su umbral. Aplican a todas las obras salvo que una persona tenga excepción en personas.json.",
+
+  "duplicados": {
+    "ventana_dias_posible_duplicado": 5,
+    "ventana_horas_posible_duplicado": 2,
+    "tolerancia_propina_monto_abs": 3000,
+    "tolerancia_discrepancia_monto_pct": 5,
+    "detectar_doble_cobro_pasarela": true,
+    "detectar_peaje_repetido_por_id": true
+  },
+
+  "combustible": {
+    "validar_estanque": true,
+    "validar_vehiculo_registrado": true,
+    "validar_vehiculo_autorizado": true,
+    "alertar_multiple_carga_mismo_dia": true,
+    "alertar_litros_semana_excedido": true,
+    "_nota_rendimiento": "El control por rendimiento (km/litro) requiere kilometraje, que Xpendit no entrega. Queda como hook para cuando se integre. Por ahora se controla por capacidad de estanque y litros/semana."
+  },
+
+  "temporal": {
+    "alertar_fin_de_semana": true,
+    "dias_max_documento_antiguo": 30,
+    "alertar_fecha_futura": true,
+    "alertar_horario_nocturno": false,
+    "hora_nocturna_desde": "23:00",
+    "hora_nocturna_hasta": "05:00"
+  },
+
+  "consistencia": {
+    "validar_iva_factura": true,
+    "validar_tipo_gasto_vs_proveedor": true,
+    "alertar_gateway_sin_boleta": true
+  },
+
+  "montos": {
+    "tope_aprobacion_gerencia": 100000,
+    "_nota": "Gastos sobre este monto se marcan MONTO_SOBRE_UMBRAL para aprobación de gerencia, salvo que la persona tenga tope_gasto_individual propio."
+  },
+
+  "_severidades": {
+    "ALTA": "Rechazo recomendado. Duplicados exactos, doble cobro, vehículo imposible.",
+    "MEDIA": "Revisión manual obligatoria. Discrepancias, posibles duplicados, fin de semana.",
+    "BAJA": "Aviso informativo. Documento antiguo, horario nocturno."
+  }
+}
