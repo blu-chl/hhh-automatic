@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 REM Windows: doble clic en este archivo para procesar el Excel de Xpendit que
 REM este en esta carpeta. La primera vez prepara un entorno propio (venv\) e
 REM instala pandas/openpyxl; las siguientes veces lo reutiliza.
@@ -7,22 +8,44 @@ cd /d "%~dp0"
 set VENV_DIR=venv
 set PY_SYS=
 
+REM --- Elegir un Python 3 "normal" (no "free-threaded" / 3.13t) ---
+REM Las builds free-threaded no tienen wheels precompilados de pandas/numpy
+REM en PyPI: pip intenta compilar numpy desde codigo fuente y falla si no
+REM hay compilador C instalado. Se prueba primero el default de "py -3" y,
+REM si resulta ser free-threaded, se recorren otras versiones instaladas.
 where py >nul 2>nul
 if %errorlevel%==0 (
-    set PY_SYS=py -3
-) else (
-    where python >nul 2>nul
-    if %errorlevel%==0 (
-        set PY_SYS=python
+    call :probar_py -3
+    if "!PY_SYS!"=="" for %%v in (3.13 3.12 3.11 3.10 3.9) do (
+        if "!PY_SYS!"=="" call :probar_py -%%v
     )
 )
 
 if "%PY_SYS%"=="" (
-    echo No se encontro Python 3 instalado en este equipo.
-    echo Instalalo desde https://www.python.org/downloads/ y marca la casilla "Add python.exe to PATH".
+    where python >nul 2>nul
+    if %errorlevel%==0 (
+        python -c "import sysconfig,sys; sys.exit(1 if sysconfig.get_config_var('Py_GIL_DISABLED') else 0)" >nul 2>nul
+        if !errorlevel!==0 set PY_SYS=python
+    )
+)
+
+if "%PY_SYS%"=="" (
+    echo No se encontro una version estandar ^(no free-threaded^) de Python 3.
+    echo Instala Python desde https://www.python.org/downloads/ y marca la
+    echo casilla "Add python.exe to PATH".
+    echo ^(Si el unico Python instalado es la variante "free-threaded" / 3.13t,
+    echo  instala tambien la version normal de Python 3 junto a esa.^)
     pause
     exit /b 1
 )
+goto :seguir
+
+:probar_py
+py %1 -c "import sysconfig,sys; sys.exit(1 if sysconfig.get_config_var('Py_GIL_DISABLED') else 0)" >nul 2>nul
+if %errorlevel%==0 set PY_SYS=py %1
+exit /b 0
+
+:seguir
 
 REM Si el venv existe pero no funciona en ESTE equipo (por ejemplo, la carpeta
 REM se copio desde otra maquina), lo detecta y lo reconstruye solo.

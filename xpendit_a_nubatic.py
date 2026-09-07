@@ -31,6 +31,7 @@ Uso explícito (opcional, para override puntual):
 import argparse
 import json
 import shutil
+import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -41,6 +42,13 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 warnings.filterwarnings("ignore")
+
+# La consola de Windows suele usar cp1252/cp850 (no UTF-8), lo que rompe los
+# emojis (📄 ✅ ⚠️) usados en los mensajes de progreso. Se fuerza UTF-8 en
+# stdout/stderr para que funcione igual en cmd.exe, PowerShell o terminal.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 FOLIO_MAX_LEN = 7
 HOJAS_VALIDAS = ["Reembolso", "Tarjeta corporativa", "Fondo recurrente"]
@@ -159,7 +167,7 @@ def _folio(v) -> str:
     try:
         f = float(v)
         return str(int(f))
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         return str(v).strip()
 
 
@@ -168,7 +176,7 @@ def _folio_excel(folio_str: str):
     o el string original si contiene letras."""
     try:
         return int(folio_str)
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         return folio_str
 
 
@@ -344,7 +352,7 @@ def _escribir_importador(gastos, empleado, obra, obra_cfg, tipos, ruta, template
     cc_nombre = cc.get("nombre", "")
     try:
         cc_cod_val = int(cc_cod)
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         cc_cod_val = cc_cod
 
     tipos_tabla = tipos.get("tipos", {})
@@ -416,7 +424,7 @@ def _escribir_importador(gastos, empleado, obra, obra_cfg, tipos, ruta, template
         ws.cell(row=i, column=6, value=cc_nombre)
         try:
             cci = int(float(g["id_cuenta_contable"]))
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             cci = g["id_cuenta_contable"]
         ws.cell(row=i, column=7, value=cci)
         ws.cell(row=i, column=8, value=tipos_tabla.get(str(cci), {}).get("nombre", ""))
