@@ -41,3 +41,7 @@ Genera en la misma carpeta:
   "parecer" venir de Excel real. Ahora se reescriben automáticamente esos
   metadatos después de guardar cada archivo, sin necesidad de abrirlo en
   Excel y volver a guardarlo manualmente.
+
+## Pendiente
+
+- Probar en Mac y Linux (Windows ya se probó y quedó funcionando).
