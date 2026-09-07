@@ -12,8 +12,8 @@ Xpendit.
    ser el único Excel de entrada presente).
 2. Ejecuta el script para tu sistema operativo:
    - **Windows**: doble clic en `Windows_Ejecutar.bat`
-   - **Mac**: doble clic en `Ejecutores/Mac_Ejecutar.command`
-   - **Linux**: `./Ejecutores/Linux_Ejecutar.sh`
+   - **Mac**: doble clic en `Exe_Segun_OS/Mac_Ejecutar.command`
+   - **Linux**: `./Exe_Segun_OS/Linux_Ejecutar.sh`
 
 La primera vez prepara un entorno virtual propio (`venv/`) e instala las
 dependencias (`pandas`, `openpyxl`); las siguientes veces lo reutiliza.
@@ -41,6 +41,13 @@ Genera en la misma carpeta:
   "parecer" venir de Excel real. Ahora se reescriben automáticamente esos
   metadatos después de guardar cada archivo, sin necesidad de abrirlo en
   Excel y volver a guardarlo manualmente.
+- **Shared strings en vez de inline strings**: `openpyxl` escribe todas las
+  celdas de texto como "inline string" (sin tabla `xl/sharedStrings.xml`,
+  la que usa Excel real). Algunos lectores de Excel de terceros no la
+  soportan y devuelven el objeto crudo de la celda en vez del texto
+  (aparecía como "[object Object]" en la UI del ERP). Ahora se reescribe
+  automáticamente con una tabla de shared strings real, sin necesidad de
+  abrir el archivo en Excel y volver a guardarlo.
 
 ## Pendiente
 
