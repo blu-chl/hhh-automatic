@@ -30,9 +30,11 @@ Uso explícito (opcional, para override puntual):
 
 import argparse
 import json
+import re
 import shutil
 import sys
 import warnings
+import zipfile
 from datetime import datetime
 from pathlib import Path
 
@@ -346,6 +348,35 @@ def _leer_tabla_jk(template_path):
     return tabla
 
 
+_METADATA_XLSX = {
+    "docProps/app.xml": [
+        (rb"<Application>.*?</Application>", b"<Application>Microsoft Excel</Application>"),
+        (rb"<AppVersion>.*?</AppVersion>", b"<AppVersion>16.0300</AppVersion>"),
+    ],
+    "docProps/core.xml": [
+        (rb"<dc:creator>.*?</dc:creator>", b"<dc:creator></dc:creator>"),
+        (rb"<cp:lastModifiedBy>.*?</cp:lastModifiedBy>", b"<cp:lastModifiedBy></cp:lastModifiedBy>"),
+    ],
+}
+
+
+def _excel_metadata_nativa(ruta: Path):
+    """openpyxl deja su propia firma en los metadatos internos del .xlsx
+    (docProps/app.xml -> "...Openpyxl X.X.X", docProps/core.xml -> creador
+    "openpyxl"). Algunas plataformas de importacion (ERPs) validan esos
+    metadatos y rechazan el archivo si no "parece" venir de Excel real; abrir
+    el archivo en Excel y volver a guardarlo lo arregla porque Excel
+    reescribe esos campos. Esto hace lo mismo sin depender de abrir Excel."""
+    tmp = ruta.with_name(ruta.name + ".tmp")
+    with zipfile.ZipFile(ruta, "r") as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            data = zin.read(item.filename)
+            for patron, nuevo in _METADATA_XLSX.get(item.filename, []):
+                data = re.sub(patron, nuevo, data)
+            zout.writestr(item, data)
+    tmp.replace(ruta)
+
+
 def _escribir_importador(gastos, empleado, obra, obra_cfg, tipos, ruta, template_path=None):
     cc = obra_cfg.get("centro_costo", {})
     cc_cod = cc.get("codigo")
@@ -430,6 +461,7 @@ def _escribir_importador(gastos, empleado, obra, obra_cfg, tipos, ruta, template
         ws.cell(row=i, column=8, value=tipos_tabla.get(str(cci), {}).get("nombre", ""))
 
     wb.save(str(ruta))
+    _excel_metadata_nativa(ruta)
     total = sum(g["monto_total"] or 0 for g in gastos)
     print(f"   📄 {ruta.name}  ({len(gastos)} comprobantes · ${total:,})")
 
@@ -484,6 +516,7 @@ def _escribir_facturas(facturas, empleado, ruta):
             cell.font = Font(bold=True, name="Arial", size=10)
 
     wb.save(ruta)
+    _excel_metadata_nativa(ruta)
     total = sum(g["monto_total"] or 0 for g in facturas)
     print(f"   📄 {ruta.name}  ({n} facturas · ${total:,})")
 
@@ -550,6 +583,7 @@ def _escribir_manual(folio_largo, sin_cc, ruta):
         )
 
     wb.save(ruta)
+    _excel_metadata_nativa(ruta)
     print(f"   📄 {ruta.name}  ({len(sin_cc)} sin CC · {len(folio_largo)} folio largo)")
 
 
