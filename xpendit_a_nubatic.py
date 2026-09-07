@@ -34,6 +34,7 @@ import re
 import shutil
 import sys
 import warnings
+import xml.etree.ElementTree as ET
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -359,21 +360,116 @@ _METADATA_XLSX = {
     ],
 }
 
+_NS_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+_NS_CT = "http://schemas.openxmlformats.org/package/2006/content-types"
+_NS_RELS = "http://schemas.openxmlformats.org/package/2006/relationships"
+_NS_XML = "http://www.w3.org/XML/1998/namespace"
 
-def _excel_metadata_nativa(ruta: Path):
-    """openpyxl deja su propia firma en los metadatos internos del .xlsx
-    (docProps/app.xml -> "...Openpyxl X.X.X", docProps/core.xml -> creador
-    "openpyxl"). Algunas plataformas de importacion (ERPs) validan esos
-    metadatos y rechazan el archivo si no "parece" venir de Excel real; abrir
-    el archivo en Excel y volver a guardarlo lo arregla porque Excel
-    reescribe esos campos. Esto hace lo mismo sin depender de abrir Excel."""
+
+def _texto_de_is(is_el):
+    """Extrae el texto de un nodo <is> (inline string), ya sea un <t> simple
+    o varios <r><t> (texto con formato mixto dentro de una misma celda)."""
+    t_el = is_el.find(f"{{{_NS_MAIN}}}t")
+    if t_el is not None:
+        return t_el.text or ""
+    return "".join(r.findtext(f"{{{_NS_MAIN}}}t", default="") for r in is_el.findall(f"{{{_NS_MAIN}}}r"))
+
+
+def _normalizar_xlsx(ruta: Path):
+    """openpyxl deja rastros que rompen la compatibilidad con lectores de
+    Excel de terceros (como el que usan algunos ERP para importar):
+
+    1) Firma los metadatos como generados por si mismo (docProps/app.xml ->
+       "...Openpyxl X.X.X", core.xml -> creador "openpyxl"). Algunos ERP
+       rechazan el archivo si no "parece" venir de Excel real.
+    2) Escribe TODAS las celdas de texto como "inline string" (sin tabla de
+       shared strings / xl/sharedStrings.xml, que es lo que usa Excel real).
+       Esto es incondicional en openpyxl (ver cell/_writer.py), no depende
+       de como se llame al script. Algunos lectores de Excel no soportan
+       inline strings y devuelven el objeto crudo de la celda en vez del
+       texto (se ve como "[object Object]" en la UI del ERP).
+
+    Abrir el archivo en Excel y volver a guardarlo arregla ambos problemas
+    porque Excel reescribe el archivo desde cero con su propio formato.
+    Esto hace lo mismo automaticamente, sin depender de abrir Excel."""
+    with zipfile.ZipFile(ruta, "r") as zin:
+        orden = [i.filename for i in zin.infolist()]
+        datos = {nombre: zin.read(nombre) for nombre in orden}
+
+    # 1) Metadatos "genericos" de Excel
+    for nombre, reemplazos in _METADATA_XLSX.items():
+        if nombre in datos:
+            contenido = datos[nombre]
+            for patron, nuevo in reemplazos:
+                contenido = re.sub(patron, nuevo, contenido)
+            datos[nombre] = contenido
+
+    # 2) inlineStr -> tabla de shared strings
+    # El prefijo "" se re-registra justo antes de cada serializacion (en vez
+    # de una sola vez al principio) porque ElementTree solo puede tener un
+    # namespace por defecto activo a la vez: si se registran los 3 juntos,
+    # los dos primeros quedan pisados y salen con prefijo autogenerado
+    # (ns0:...) en vez de sin prefijo, como lo escribe Excel real.
+    ET.register_namespace("", _NS_MAIN)
+
+    hojas = [n for n in orden if re.match(r"xl/worksheets/sheet\d+\.xml$", n)]
+    tabla, indices = [], {}
+
+    def _indice(texto):
+        if texto not in indices:
+            indices[texto] = len(tabla)
+            tabla.append(texto)
+        return indices[texto]
+
+    for hoja in hojas:
+        root = ET.fromstring(datos[hoja])
+        tocado = False
+        for c in root.iter(f"{{{_NS_MAIN}}}c"):
+            if c.get("t") != "inlineStr":
+                continue
+            is_el = c.find(f"{{{_NS_MAIN}}}is")
+            if is_el is None:
+                continue
+            idx = _indice(_texto_de_is(is_el))
+            c.remove(is_el)
+            c.set("t", "s")
+            ET.SubElement(c, f"{{{_NS_MAIN}}}v").text = str(idx)
+            tocado = True
+        if tocado:
+            datos[hoja] = ET.tostring(root, xml_declaration=True, encoding="UTF-8")
+
+    if tabla:
+        sst = ET.Element(f"{{{_NS_MAIN}}}sst", {"count": str(len(tabla)), "uniqueCount": str(len(tabla))})
+        for texto in tabla:
+            si = ET.SubElement(sst, f"{{{_NS_MAIN}}}si")
+            t = ET.SubElement(si, f"{{{_NS_MAIN}}}t")
+            t.text = texto
+            if texto != texto.strip():
+                t.set(f"{{{_NS_XML}}}space", "preserve")
+        datos["xl/sharedStrings.xml"] = ET.tostring(sst, xml_declaration=True, encoding="UTF-8")
+        if "xl/sharedStrings.xml" not in orden:
+            orden.append("xl/sharedStrings.xml")
+
+        ET.register_namespace("", _NS_CT)
+        ct_root = ET.fromstring(datos["[Content_Types].xml"])
+        ov = ET.SubElement(ct_root, f"{{{_NS_CT}}}Override")
+        ov.set("PartName", "/xl/sharedStrings.xml")
+        ov.set("ContentType", "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml")
+        datos["[Content_Types].xml"] = ET.tostring(ct_root, xml_declaration=True, encoding="UTF-8")
+
+        ET.register_namespace("", _NS_RELS)
+        rels_root = ET.fromstring(datos["xl/_rels/workbook.xml.rels"])
+        ids_num = [int(re.sub(r"\D", "", r.get("Id")) or 0) for r in rels_root]
+        rel = ET.SubElement(rels_root, f"{{{_NS_RELS}}}Relationship")
+        rel.set("Id", f"rId{max(ids_num, default=0) + 1}")
+        rel.set("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings")
+        rel.set("Target", "sharedStrings.xml")
+        datos["xl/_rels/workbook.xml.rels"] = ET.tostring(rels_root, xml_declaration=True, encoding="UTF-8")
+
     tmp = ruta.with_name(ruta.name + ".tmp")
-    with zipfile.ZipFile(ruta, "r") as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
-        for item in zin.infolist():
-            data = zin.read(item.filename)
-            for patron, nuevo in _METADATA_XLSX.get(item.filename, []):
-                data = re.sub(patron, nuevo, data)
-            zout.writestr(item, data)
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
+        for nombre in orden:
+            zout.writestr(nombre, datos[nombre])
     tmp.replace(ruta)
 
 
@@ -461,7 +557,7 @@ def _escribir_importador(gastos, empleado, obra, obra_cfg, tipos, ruta, template
         ws.cell(row=i, column=8, value=tipos_tabla.get(str(cci), {}).get("nombre", ""))
 
     wb.save(str(ruta))
-    _excel_metadata_nativa(ruta)
+    _normalizar_xlsx(ruta)
     total = sum(g["monto_total"] or 0 for g in gastos)
     print(f"   📄 {ruta.name}  ({len(gastos)} comprobantes · ${total:,})")
 
@@ -516,7 +612,7 @@ def _escribir_facturas(facturas, empleado, ruta):
             cell.font = Font(bold=True, name="Arial", size=10)
 
     wb.save(ruta)
-    _excel_metadata_nativa(ruta)
+    _normalizar_xlsx(ruta)
     total = sum(g["monto_total"] or 0 for g in facturas)
     print(f"   📄 {ruta.name}  ({n} facturas · ${total:,})")
 
@@ -583,7 +679,7 @@ def _escribir_manual(folio_largo, sin_cc, ruta):
         )
 
     wb.save(ruta)
-    _excel_metadata_nativa(ruta)
+    _normalizar_xlsx(ruta)
     print(f"   📄 {ruta.name}  ({len(sin_cc)} sin CC · {len(folio_largo)} folio largo)")
 
 

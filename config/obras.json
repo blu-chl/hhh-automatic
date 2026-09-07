@@ -109,6 +109,15 @@
     }
   },
 
+  "TALLER FREIRE": {
+    "nombre": "TALLER FREIRE",
+    "activa": true,
+    "centro_costo":{
+      "codigo": 25106,
+      "nombre": "OTRAS CUENTAS DE AJUSTE"
+    }
+  },
+
   "_PLANTILLA_OBRA_NUEVA": {
     "nombre": "CLHxxx NOMBRE OBRA",
     "activa": false,
